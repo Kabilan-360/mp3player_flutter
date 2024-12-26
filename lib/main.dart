@@ -13,54 +13,67 @@ class MusicPlayerScreen extends StatefulWidget {
 }
 
 class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
-  // Create an AudioPlayer instance
   final AudioPlayer _audioPlayer = AudioPlayer();
 
-  // Variable to track the current playing state
   bool isPlaying = false;
-
-  // Variables to store current and total song duration
   Duration currentPosition = Duration.zero;
   Duration totalDuration = Duration.zero;
+
+  final List<Map<String, String>> upNextTracks = [
+    {"title": "I'm Fine", "artist": "Ashe", "duration": "2:16"},
+    {"title": "Drown", "artist": "Dabin", "duration": "4:19"},
+    {"title": "Memories", "artist": "Maroon 5", "duration": "3:10"},
+  ];
 
   @override
   void initState() {
     super.initState();
 
-    // Listen to the audio state changes
-    _audioPlayer.onPositionChanged.listen((Duration position) {
+    _audioPlayer.onPositionChanged.listen((position) {
       setState(() {
         currentPosition = position;
       });
     });
 
-    _audioPlayer.onDurationChanged.listen((Duration duration) {
+    _audioPlayer.onDurationChanged.listen((duration) {
       setState(() {
         totalDuration = duration;
       });
     });
 
-    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
+    _audioPlayer.onPlayerStateChanged.listen((state) {
       setState(() {
         isPlaying = state == PlayerState.playing;
       });
     });
   }
 
-  // Function to play the audio
   Future<void> playAudio() async {
-    await _audioPlayer.setSource(AssetSource('assets/RojaPonthottam.mp3'));
-    await _audioPlayer.resume();
+    try {
+      await _audioPlayer.setSource(AssetSource('assets/RojaPonthottam.mp3'));
+      await _audioPlayer.resume();
+    } catch (e) {
+      print('Error playing audio: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error loading audio file.')),
+      );
+    }
   }
 
-  // Function to pause the audio
   Future<void> pauseAudio() async {
     await _audioPlayer.pause();
   }
 
-  // Function to stop the audio
   Future<void> stopAudio() async {
     await _audioPlayer.stop();
+  }
+
+  void playNext() {
+    // Logic for playing the next track
+  }
+
+  void playPrevious() {
+    // Logic for playing the previous track
   }
 
   @override
@@ -85,30 +98,28 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
         ],
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // Replacing image with an Icon
+          // Placeholder for album art
           Container(
             margin: const EdgeInsets.all(16),
             height: 300,
             width: 300,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: Colors.grey[800],  // Background color for the container
+              color: Colors.grey[800],
             ),
             child: const Icon(
-              Icons.music_note,  // Icon for album art
+              Icons.music_note,
               size: 100,
               color: Colors.white,
             ),
           ),
-          // Song Details
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          // Song details
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Roja Ponthottam',
                   style: TextStyle(
                     fontSize: 24,
@@ -116,8 +127,8 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Text(
+                SizedBox(height: 4),
+                Text(
                   'A. R. Rahman',
                   style: TextStyle(
                     fontSize: 16,
@@ -128,15 +139,13 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          // Music Progress
+          // Slider for playback progress
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               children: [
                 Slider(
-                  // Update the slider value based on currentPosition
                   value: currentPosition.inSeconds.toDouble(),
-                  // Set the maximum value of the slider to the totalDuration
                   max: totalDuration.inSeconds.toDouble(),
                   onChanged: (value) async {
                     final position = Duration(seconds: value.toInt());
@@ -162,16 +171,14 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          // Playback Controls
+          // Playback controls
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               IconButton(
                 icon: const Icon(Icons.skip_previous, color: Colors.white),
                 iconSize: 40,
-                onPressed: () {
-                  // Logic for previous track
-                },
+                onPressed: playPrevious,
               ),
               IconButton(
                 icon: Icon(
@@ -190,9 +197,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
               IconButton(
                 icon: const Icon(Icons.skip_next, color: Colors.white),
                 iconSize: 40,
-                onPressed: () {
-                  // Logic for next track
-                },
+                onPressed: playNext,
               ),
             ],
           ),
@@ -220,39 +225,26 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
                   ),
                   const SizedBox(height: 10),
                   Expanded(
-                    child: ListView(
-                      children: const [
-                        ListTile(
-                          leading: Icon(Icons.music_note, color: Colors.white),
+                    child: ListView.builder(
+                      itemCount: upNextTracks.length,
+                      itemBuilder: (context, index) {
+                        final track = upNextTracks[index];
+                        return ListTile(
+                          leading: const Icon(Icons.music_note, color: Colors.white),
                           title: Text(
-                            "I'm Fine",
-                            style: TextStyle(color: Colors.white),
+                            track['title']!,
+                            style: const TextStyle(color: Colors.white),
                           ),
                           subtitle: Text(
-                            'Ashe',
-                            style: TextStyle(color: Colors.grey),
+                            track['artist']!,
+                            style: const TextStyle(color: Colors.grey),
                           ),
                           trailing: Text(
-                            '2:16',
-                            style: TextStyle(color: Colors.grey),
+                            track['duration']!,
+                            style: const TextStyle(color: Colors.grey),
                           ),
-                        ),
-                        ListTile(
-                          leading: Icon(Icons.music_note, color: Colors.white),
-                          title: Text(
-                            'Drown',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          subtitle: Text(
-                            'Dabin',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          trailing: Text(
-                            '4:19',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -264,7 +256,6 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
     );
   }
 
-  // Helper function to format duration in minutes:seconds
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes.toString().padLeft(2, '0');
     final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
